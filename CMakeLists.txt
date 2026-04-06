@@ -207,6 +207,7 @@ set(LINTER_SRC
     linter/src/rules/incomplete_assignment_pattern.cpp
     linter/src/rules/assignment_pattern_values.cpp
     linter/src/rules/invalid_liblist.cpp
+    linter/src/rules/undeclared_cell.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})

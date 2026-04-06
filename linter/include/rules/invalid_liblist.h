@@ -5,5 +5,5 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 
 void CheckInvalidLiblist(const SURELOG::FileContent* fileContent,
-                                  SURELOG::ErrorContainer* errors,
-                                  SURELOG::SymbolTable* symbols);
+                         SURELOG::ErrorContainer* errors,
+                         SURELOG::SymbolTable* symbols);
