@@ -7,30 +7,17 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <iostream>
 #include <string_view>
 #include <unordered_map>
 
 #include "main/lint_rules.h"
-#include "utils/ast_utils.h"
 #include "utils/design_utils.h"
 #include "utils/location_utils.h"
+#include "utils/module_utils.h"
 
 namespace SL = SURELOG;
 
 namespace {
-
-struct DesignInfo {
-  std::string libName;
-  std::string_view moduleName;
-  std::string scopeName;
-};
-
-struct ModuleInfo {
-  std::string_view fullName;
-  SL::NodeId nodeId;
-  const SL::FileContent* fileContent;
-};
 
 struct CellInfo {
   SL::NodeId configNode;
@@ -54,45 +41,6 @@ auto FindScopeContainer(const SL::FileContent* fileContent, SL::NodeId node)
     current = fileContent->Parent(current);
   }
   return SL::InvalidNodeId;
-}
-
-auto ExtractDesignInfo(const SL::FileContent* fileContent,
-                       SL::NodeId configDecl) -> DesignInfo {
-  DesignInfo info;
-
-  SL::NodeId designStmt =
-      fileContent->sl_get(configDecl, SL::VObjectType::paDesign_statement);
-  if (!designStmt) {
-    return info;
-  }
-
-  std::vector<std::string_view> identifiers;
-  SL::NodeId current = fileContent->Child(designStmt);
-  while (current) {
-    if (fileContent->Type(current) == SL::VObjectType::slStringConst) {
-      identifiers.push_back(fileContent->SymName(current));
-    }
-    current = fileContent->Sibling(current);
-  }
-
-  if (identifiers.empty()) {
-    return info;
-  }
-
-  if (identifiers.size() == 1) {
-    info.moduleName = identifiers[0];
-    info.libName = "";
-    info.scopeName = info.moduleName;
-  } else {
-    info.libName = identifiers[0];
-    info.moduleName = identifiers.back();
-    info.scopeName = identifiers[1];
-    for (size_t i = 2; i < identifiers.size(); ++i) {
-      info.scopeName = info.scopeName + "::" + std::string(identifiers[i]);
-    }
-  }
-
-  return info;
 }
 
 auto ExtractCellNameFromClause(const SL::FileContent* fileContent,
@@ -140,7 +88,8 @@ auto CollectAllCellInfos(SL::Design* design) -> std::vector<CellInfo> {
              kRoot, SL::VObjectType::paConfig_declaration)) {
       for (SL::NodeId const kConfigStatement : fileCont->sl_collect_all(
                kConfigDecl, SL::VObjectType::paConfig_rule_statement)) {
-        DesignInfo kDesignInfo = ExtractDesignInfo(fileCont, kConfigDecl);
+        DesignInfo kDesignInfo =
+            DesignUtils::ExtractDesignInfo(fileCont, kConfigDecl);
 
         SL::NodeId kCellClause = fileCont->Child(kConfigStatement);
         while (kCellClause) {
@@ -196,76 +145,6 @@ auto CellIsInModule(
   return false;
 }
 
-auto CollectAllModules(SL::Design* design)
-    -> std::unordered_map<std::string, ModuleInfo> {
-  std::unordered_map<std::string, ModuleInfo> moduleMap;
-
-  DesignUtils::ForEachFileContent(
-      design, [&](const SL::FileContent* fileContent) {
-        SL::NodeId const kRoot = fileContent->getRootNode();
-        if (!kRoot) {
-          return;
-        }
-
-        for (SL::NodeId const kModuleDecl : fileContent->sl_collect_all(
-                 kRoot, SL::VObjectType::paModule_declaration)) {
-          SL::NodeId kAnsiHeader = fileContent->Child(kModuleDecl);
-          if (!kAnsiHeader || (fileContent->Type(kAnsiHeader) !=
-                                   SL::VObjectType::paModule_ansi_header &&
-                               fileContent->Type(kAnsiHeader) !=
-                                   SL::VObjectType::paModule_nonansi_header)) {
-            continue;
-          }
-
-          std::string const kPrefix = GetPrefix(fileContent, kAnsiHeader);
-          std::string const kFullName = kPrefix.substr(0, kPrefix.size() - 2);
-
-          ModuleInfo info{.fullName = kFullName,
-                          .nodeId = kModuleDecl,
-                          .fileContent = fileContent};
-
-          moduleMap[kFullName] = info;
-        }
-
-        for (SL::NodeId const kInterfaceDecl : fileContent->sl_collect_all(
-                 kRoot, SL::VObjectType::paInterface_declaration)) {
-          SL::NodeId kHeader = fileContent->Child(kInterfaceDecl);
-          if (!kHeader || fileContent->Type(kHeader) !=
-                              SL::VObjectType::paInterface_ansi_header) {
-            continue;
-          }
-
-          std::string const kPrefix = GetPrefix(fileContent, kHeader);
-          std::string const kFullName = kPrefix.substr(0, kPrefix.size() - 2);
-
-          ModuleInfo info{.fullName = kFullName,
-                          .nodeId = kInterfaceDecl,
-                          .fileContent = fileContent};
-
-          moduleMap[kFullName] = info;
-        }
-
-        for (SL::NodeId const kPackageDecl : fileContent->sl_collect_all(
-                 kRoot, SL::VObjectType::paPackage_declaration)) {
-          SL::NodeId kNameNode =
-              fileContent->sl_get(kPackageDecl, SL::VObjectType::slStringConst);
-          if (!kNameNode) {
-            continue;
-          }
-
-          std::string_view const kShortName = fileContent->SymName(kNameNode);
-
-          ModuleInfo info{.fullName = kShortName,
-
-                          .nodeId = kPackageDecl,
-                          .fileContent = fileContent};
-
-          moduleMap[kShortName] = info;
-        }
-      });
-  return moduleMap;
-}
-
 }  // namespace
 
 void CheckUndeclaredCell(SL::Design* design, SL::ErrorContainer* errors,
@@ -274,7 +153,7 @@ void CheckUndeclaredCell(SL::Design* design, SL::ErrorContainer* errors,
     return;
   }
 
-  auto globalModuleMap = CollectAllModules(design);
+  auto globalModuleMap = ModuleUtils::CollectAllModules(design);
   if (globalModuleMap.empty()) {
     return;
   }

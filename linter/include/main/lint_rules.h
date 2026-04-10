@@ -74,6 +74,7 @@ enum LintIdEnum : uint16_t {
   LINT_ASSIGNMENT_PATTERN_VALUES,
   LINT_INVALID_LIBLIST,
   LINT_UNDECLARED_CELL,
+  LINT_UNDECLARED_DESIGN,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -272,6 +273,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Liblist is empty for %s"},
     LintRuleInfo{.type = LINT_UNDECLARED_CELL,
                  .text = "Cell %s is not declared"},
+    LintRuleInfo{.type = LINT_UNDECLARED_DESIGN,
+                 .text = "Top design %s is not declared"},
 };
 
 inline void RegisterLintRules() {

@@ -5,6 +5,7 @@
 #include "main/lint_rules.h"
 #include "rules/invalid_liblist.h"
 #include "rules/undeclared_cell.h"
+#include "rules/undeclared_design.h"
 #include "utils.h"
 
 namespace fs = std::filesystem;
@@ -45,6 +46,24 @@ TEST(UndeclaredCellTest, RaiseError) {
   global::CheckWithErrorsExpected(tests_path,
                                   verihogg_lint::LINT_UNDECLARED_CELL,
                                   ignoreList, CheckUndeclaredCell);
+}
+
+TEST(UndeclaredDesignTest, NoError) {
+  const fs::path tests_path{BasePath() / "UndeclaredDesign" / "NoError"};
+
+  global::CheckWithNoErrorsExpected(tests_path, CheckUndeclaredDesign);
+}
+
+TEST(UndeclaredDesignTest, RaiseError) {
+  const fs::path tests_path{BasePath() / "UndeclaredDesign" / "RaiseError"};
+
+  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+      SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS,
+      SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
+
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_UNDECLARED_DESIGN,
+                                  ignoreList, CheckUndeclaredDesign);
 }
 
 }  // namespace
