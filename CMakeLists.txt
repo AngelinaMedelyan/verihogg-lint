@@ -219,6 +219,10 @@ target_link_libraries(verihoggLintLib PUBLIC ${ANTLR_LIBRARY})
 target_link_libraries(verihoggLintLib PUBLIC ${ZLIB_LIBRARY})
 target_include_directories(verihoggLintLib PUBLIC linter/include)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(verihoggLintLib PRIVATE -g -Og)
+endif()
+
 foreach(f ${LINTER_SRC})
   if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
     message(FATAL_ERROR "Linter source file not found: ${f}\nCheck for typos/incorrect path in CMakeLists.txt")
@@ -230,6 +234,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_executable(${PROJECT_NAME} linter/src/main/lint.cpp)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(${PROJECT_NAME} PRIVATE -g -Og)
+endif()
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
