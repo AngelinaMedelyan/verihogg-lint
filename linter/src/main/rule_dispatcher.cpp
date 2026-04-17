@@ -4,13 +4,6 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <uhdm/vpi_user.h>
-#include <yaml-cpp/node/convert.h>      // NOLINT(misc-include-cleaner)
-#include <yaml-cpp/node/detail/impl.h>  // NOLINT(misc-include-cleaner)
-#include <yaml-cpp/node/emit.h>
-#include <yaml-cpp/node/node.h>
-#include <yaml-cpp/node/parse.h>
-#include <yaml-cpp/null.h>
-#include <yaml-cpp/parser.h>
 
 #include <filesystem>
 
