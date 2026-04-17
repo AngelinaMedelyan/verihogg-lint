@@ -1,164 +1,25 @@
 #include "main/cli.h"
 
-#include <array>
+#include <yaml-cpp/node/convert.h>      // NOLINT(misc-include-cleaner)
+#include <yaml-cpp/node/detail/impl.h>  // NOLINT(misc-include-cleaner)
+#include <yaml-cpp/node/emit.h>
+#include <yaml-cpp/node/node.h>
+#include <yaml-cpp/node/parse.h>
+#include <yaml-cpp/null.h>
+#include <yaml-cpp/parser.h>
+
 #include <cstring>
 #include <filesystem>
 #include <gsl/span>
 #include <iostream>
-#include <string>
 
 #include "main/rule_dispatcher.h"
 
-namespace {
-
-struct RuleInfo {
-  const char* id;
-  const char* description;
-};
-}  // namespace
-
 namespace cli {
 
-constexpr size_t CONFIG_FILE_ARG_LEN = 13;
+constexpr size_t CONFIG_FLAG_LEN = 13;
 
-static constexpr std::array kRules = std::to_array<RuleInfo>({
-    {.id = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
-     .description =
-         "Expecting 0, 1 or 2 as first argument to '$fatal' system task"},
-    {.id = "CLASS_VARIABLE_LIFETIME",
-     .description = "'automatic' lifetime for class variable not allowed"},
-    {.id = "IMPLICIT_DATA_TYPE_IN_DECLARATION",
-     .description =
-         "Expecting net type (e.g. wire) or 'var' before implicit data type"},
-    {.id = "PARAMETER_DYNAMIC_ARRAY",
-     .description = "Fixed size required for parameter dimension"},
-    {.id = "HIERARCHICAL_INTERFACE_IDENTIFIER",
-     .description = "Hierarchical interface identifier not allowed"},
-    {.id = "PROTOTYPE_RETURN_DATA_TYPE",
-     .description =
-         "Expecting return data type or void for function prototype"},
-    {.id = "DPI_DECLARATION_STRING",
-     .description = R"(Expecting "DPI" or "DPI-C")"},
-    {.id = "REPETITION_IN_SEQUENCE",
-     .description = "Goto '[-> and non-consecutive '[= operators not allowed"},
-    {.id = "COVERPOINT_EXPRESSION_TYPE",
-     .description = "Coverpoint expression should be of an integral data type"},
-    {.id = "COVERGROUP_EXPRESSION",
-     .description =
-         "Expecting constant expression or non-ref covergroup argument"},
-    {.id = "CONCATENATION_MULTIPLIER",
-     .description =
-         "Expecting constant expression as concatenation multiplier"},
-    {.id = "PARAMETER_OVERRIDE",
-     .description = "Expecting parentheses around parameter override"},
-    {.id = "MULTIPLE_DOT_STAR_CONNECTIONS",
-     .description = "'.*' cannot appear more than once in the port list"},
-    {.id = "SELECT_IN_EVENT_CONTROL",
-     .description = "Select in event control not allowed"},
-    {.id = "EMPTY_ASSIGNMENT_PATTERN",
-     .description = "Empty assignment pattern '{}' not allowed"},
-    {.id = "MISSING_FOR_LOOP_INITIALIZATION",
-     .description = "'for' loop variable initialization required"},
-    {.id = "MISSING_FOR_LOOP_CONDITION",
-     .description = "'for' loop conditional expression required"},
-    {.id = "MISSING_FOR_LOOP_STEP", .description = "'for' loop step required"},
-    {.id = "FOREACH_LOOP_CONDITION",
-     .description =
-         "Multidimensional array select not allowed in foreach loop condition"},
-    {.id = "SELECT_IN_WEIGHT",
-     .description = "Select in weight specification not allowed"},
-    {.id = "ASSIGNMENT_PATTERN",
-     .description =
-         "Expecting assignment pattern '{...}' instead of concatenation"},
-    {.id = "ASSIGNMENT_PATTERN_CONTEXT",
-     .description =
-         "Assignment pattern not allowed outside assignment-like context"},
-    {.id = "SCALAR_ASSIGNMENT_PATTERN",
-     .description = "Variable of 1-bit scalar type not allowed as assignment "
-                    "pattern target"},
-    {.id = "TARGET_UNPACKED_ARRAY_CONCATENATION",
-     .description =
-         "Unpacked array concatenation not allowed as target expression"},
-    {.id = "INSIDE_OPERATOR",
-     .description = "'inside' operator in constant expression not allowed"},
-    {.id = "INSIDE_OPERATOR_RANGE",
-     .description = "Expecting curly braces {} around 'inside' operator range"},
-    {.id = "TYPE_CASTING",
-     .description = "Expecting tick before type casting expression"},
-    {.id = "TIME_VALUE",
-     .description = "Unexpected white space between number and time value"},
-    {.id = "MULTIPLE_BINS",
-     .description = "Specification of multiple bins dimension not allowed"},
-    {.id = "ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE",
-     .description =
-         "Expecting attribute instance after block identifier for assertion"},
-    {.id = "SYSTEM_FUNCTION_ARGUMENTS",
-     .description = "Maximum number of arguments for system function exceeded"},
-    {.id = "WILDCARD_EQUALITY_OPERATOR",
-     .description = "Expecting wildcard operator '==?' instead of '=?='"},
-    {.id = "WILDCARD_INEQUALITY_OPERATOR",
-     .description = "Expecting wildcard operator '!=?' instead of '!?='"},
-    {.id = "EXPONENT_FORMAT_TIME_VALUE",
-     .description = "Unexpected exponent format for time value"},
-    {.id = "NOF_PARAMETER_OVERRIDES",
-     .description = "Expected # parameter overrides, found #module; endmodule"},
-    {.id = "MISSING_FUNCTION_IMPLEMENTATION",
-     .description = "extern function is not implemented"},
-    {.id = "MISSING_TASK_IMPLEMENTATION",
-     .description = "extern task is not implemented"},
-    {.id = "TASK_IMPLEMENTATION_SCOPE",
-     .description = "extern task implemented outside of its class scope"},
-    {.id = "CONSTRAINT_IMPLEMENTATION_SCOPE",
-     .description = "extern constraint implemented outside of its class scope"},
-    {.id = "FUNCTION_IMPLEMENTATION_SCOPE",
-     .description = "extern function implemented outside of its class scope"},
-    {.id = "MODPORT_IMPORT_EXPORT_PORT",
-     .description = "еxpected method name instead of interface signal name"},
-    {.id = "EVENT_CONTROL_EXPRESSION",
-     .description = "еxpected singular data type for event control expression "
-                    "instead of type"},
-    {.id = "METHOD_OVERRIDE_ARGUMENT_NAME",
-     .description = "argument name of method does not match of override"},
-    {.id = "FUNCTION_IMPLEMENTATION_RETURN_TYPE",
-     .description =
-         "return type of function must be the same as prototype return type"},
-    {.id = "FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE",
-     .description = "Internal return type for the implementation of extern "
-                    "method requires scope resolution"},
-    {.id = "METHOD_IMPLEMENTATION_ARGUMENT_TYPE",
-     .description = "Argument type of method must be the same as prototype "
-                    "argument type (non-standard use of type alias)"},
-    {.id = "VOID_CAST_OF_VOID_FUNCTION",
-     .description = "void cast of void function not allowed"},
-    {.id = "LOGICAL_NEGATION",
-     .description = "Operand of type not allowed with logical negation (use == "
-                    "null instead)"},
-
-    {.id = "EXTEND_CLASS", .description = "extending non existing class"},
-    {.id = "DUPLICATE_CONSTRUCTOR",
-     .description = "duplicate constructor already declared"},
-    {.id = "DUPLICATE_CLASS",
-     .description = "duplicate class, already declared"},
-
-    {.id = "EXTERN_CONSTRAINT_UNDECLARED",
-     .description = "outer class constraint was not declared extern"},
-    {.id = "EXTERN_FUNCTION_UNDECLARED",
-     .description = "outer class function was not declared extern"},
-    {.id = "EXTERN_TASK_UNDECLARED",
-     .description = "outer class task was not declared extern"},
-    {.id = "EXTEND_INTERFACE_CLASS",
-     .description =
-         "extending interface class by non-interface class not allowed"},
-    {.id = "IMPLEMENT_CLASS",
-     .description = "implementing non-interface class by class not allowed"},
-    {.id = "IMPLEMENT_INTERFACE_CLASS",
-     .description = "implementing non existing interface class"},
-    {.id = "CIRCULAR_INHERITANCE", .description = "class extends itself"},
-});
-
-static constexpr auto kRuleCount = kRules.size();
-
-auto ParseArgs(gsl::span<const char*> args) -> Options {
+auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
 
   opts.surelog_args.push_back(args[0]);
@@ -178,17 +39,88 @@ auto ParseArgs(gsl::span<const char*> args) -> Options {
       opts.show_rules = true;
     } else if (std::strcmp(arg, "--surelog-help") == 0) {
       opts.show_surelog_help = true;
-    } else if (std::strncmp(arg, "--config-file", CONFIG_FILE_ARG_LEN) == 0) {
-      const std::string strArg{arg};
-      const std::string config_file =
-          strArg.substr(CONFIG_FILE_ARG_LEN + 1, strArg.size());
-      opts.config_file = std::filesystem::path{config_file};
-    } else {
+    }  // else if (std::strncmp(arg, "--config-file", CONFIG_FLAG_LEN) == 0) {
+    //   const std::string strArg{arg};
+    //   const std::string config_file =
+    //       strArg.substr(CONFIG_FLAG_LEN + 1, strArg.size());
+    //   opts.config_file = std::filesystem::path{config_file};
+    // }
+    else {
       opts.surelog_args.push_back(arg);
     }
   }
 
   return opts;
+}
+
+// auto GetYamlConfig(const std::filesystem::path& configFile) -> YAML::Node {
+//   if (!configFile.empty() && std::filesystem::exists(configFile)) {
+//     try {
+//       return YAML::LoadFile(configFile);
+//     } catch (const std::exception& e) {
+//       std::cerr << "Bad config file" << "\n";
+//       return YAML::Node{};
+//     }
+//   }
+
+//   const std::filesystem::path configPath = DefaultConfigFileName;
+//   std::filesystem::path currentDir = std::filesystem::current_path();
+
+//   while (!std::filesystem::exists(currentDir / configPath)) {
+//     if (currentDir.parent_path() == currentDir) {
+//       std::cerr << "No config file" << "\n";
+//       return YAML::Node{};
+//     }
+//     currentDir = currentDir.parent_path();
+//   }
+
+//   try {
+//     return YAML::LoadFile(currentDir / configPath);
+//   } catch (const std::exception& e) {
+//     std::cerr << "Bad config file" << "\n";
+//     return YAML::Node{};
+//   }
+// }
+
+// template <typename RuleType>
+// void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
+//   const YAML::Node node = tree[rule.idName];
+//   if (node) {
+//     const auto value = node.as<std::string>();
+
+//     if (value == "yes" || value == "true") {
+//       rule.enabled = true;
+//     } else if (value == "false" || value == "no") {
+//       rule.enabled = false;
+//     } else {
+//       std::cerr << "Expected boolean, got: "
+//                 << std::string(value.begin(), value.end()) << "\n";
+//     }
+//   }
+// }
+
+// void FilterRules(const std::filesystem::path& configFile) {
+//   const auto yaml = GetYamlConfig(configFile);
+//   if (yaml.IsNull()) {
+//     return;
+//   }
+
+//   for (auto& rule : RuleInfo::allRules) {
+//     FilterSpecificRule(rule, yaml);
+//   }
+//   for (auto& rule : RuleInfo::globalRules) {
+//     FilterSpecificRule(rule, yaml);
+//   }
+// }
+
+void DumpConfig() {
+  std::cout << "Checks:\n";
+  for (auto& rule : RuleInfo::allRules) {
+    std::cout << "  " << rule.idName << "\n";
+  }
+  for (auto& rule : RuleInfo::globalRules) {
+    std::cout << "  " << rule.idName << "\n";
+  }
 }
 
 void PrintVersion() { std::cout << "verihogg-lint " << kVersion << "\n"; }
@@ -234,12 +166,16 @@ void PrintHelp(const char* programName) {
 }
 
 void PrintRules() {
-  std::cout << "Available lint rules (" << kRuleCount << "):\n";
+  std::cout << "Available lint rules (" << RuleInfo::TotalRuleCount << "):\n";
 
-  for (const auto& rule : kRules) {
-    std::cout << "\n  " << rule.id << "\n"
+  for (const auto& rule : RuleInfo::allRules) {
+    std::cout << "\n  " << rule.idName << "\n"
+              << "      " << rule.description << "\n";
+  }
+
+  for (const auto& rule : RuleInfo::globalRules) {
+    std::cout << "\n  " << rule.idName << "\n"
               << "      " << rule.description << "\n";
   }
 }
-
 }  // namespace cli

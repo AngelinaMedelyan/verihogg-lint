@@ -26,7 +26,7 @@ auto main(int argc, const char** argv) -> int {
   const cli::Options kOpts = cli::ParseArgs(args);
 
   if (kOpts.dump_config) {
-    DumpConfig();
+    // DumpConfig();
     return 0;
   }
 

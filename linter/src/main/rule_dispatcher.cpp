@@ -4,276 +4,46 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <uhdm/vpi_user.h>
-#include <yaml-cpp/node/convert.h>      // NOLINT(misc-include-cleaner)
-#include <yaml-cpp/node/detail/impl.h>  // NOLINT(misc-include-cleaner)
-#include <yaml-cpp/node/emit.h>
-#include <yaml-cpp/node/node.h>
-#include <yaml-cpp/node/parse.h>
-#include <yaml-cpp/null.h>
-#include <yaml-cpp/parser.h>
 
-#include <array>
-#include <exception>
 #include <filesystem>
-#include <functional>
-#include <iostream>
-#include <string>
-#include <string_view>
 
-#include "rules/assertion_statement_atribute_instance.h"
-#include "rules/assignment_pattern.h"
-#include "rules/assignment_pattern_context.h"
-#include "rules/assignment_pattern_values.h"
-#include "rules/circular_inheritance.h"
-#include "rules/class_variable_lifetime.h"
-#include "rules/concatenation_multiplier.h"
-#include "rules/covergroup_expression.h"
-#include "rules/coverpoint_expression_type.h"
-#include "rules/dpi_decl_string.h"
-#include "rules/duplicate_class.h"
-#include "rules/duplicate_constructor.h"
-#include "rules/empty_assignment_pattern.h"
-#include "rules/event_control_expression.h"
-#include "rules/exponent_format_time_value.h"
-#include "rules/extend_class.h"
-#include "rules/extend_interface_class.h"
-#include "rules/extern_constraint_undeclared.h"
-#include "rules/extern_function_undeclared.h"
-#include "rules/extern_task_undeclared.h"
 #include "rules/fatal_rule.h"
-#include "rules/foreach_loop_condition.h"
-#include "rules/function_implementation_internal_return_type.h"
-#include "rules/function_implementation_return_type.h"
-#include "rules/function_implemention_scope.h"
-#include "rules/hierarchical_interface_identifier.h"
-#include "rules/implement_class.h"
-#include "rules/implement_interface_class.h"
-#include "rules/implicit_data_type.h"
-#include "rules/incomplete_assignment_pattern.h"
-#include "rules/inside_operator.h"
-#include "rules/inside_operator_range.h"
-#include "rules/logical_negation.h"
-#include "rules/method_implementation_argument_type.h"
-#include "rules/method_override_argument_name.h"
-#include "rules/missing_for_loop_condition.h"
-#include "rules/missing_for_loop_initialization.h"
-#include "rules/missing_for_loop_step.h"
-#include "rules/missing_function_implementation.h"
-#include "rules/modport_import_export_port.h"
-#include "rules/multiple_bins.h"
-#include "rules/multiple_dot_star_connection.h"
-#include "rules/nof_parameter_override.h"
-#include "rules/parameter_dynamic_array.h"
-#include "rules/parameter_override.h"
-#include "rules/prototype_return_data_type.h"
-#include "rules/repeat_in_sequence.h"
-#include "rules/scalar_assignment_pattern.h"
-#include "rules/select_in_event_control.h"
-#include "rules/select_in_weight.h"
-#include "rules/system_function_arguments.h"
-#include "rules/target_unpacked_array_concatenation.h"
-#include "rules/time_value.h"
-#include "rules/type_casting.h"
-#include "rules/void_cast_of_void_function.h"
-#include "rules/wildcard_operator.h"
-#include "yaml-cpp/node/node.h"
-#include "yaml-cpp/null.h"
 
 namespace SL = SURELOG;
 
-namespace {
-struct Rule {
-  std::string_view name;
-  bool enabled = true;
-  std::function<void(const SL::FileContent*, SL::ErrorContainer*,
-                     SL::SymbolTable*)>
-      check;
-};
-
-struct GlobalRule {
-  std::string_view name;
-  bool enabled = true;
-  std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)> check;
-};
-
-const auto allRules = std::to_array<Rule>({
-    // clang-format off
-    {.name = "RepetitionInSequence", .check = CheckRepetitionInSequence},
-    {.name = "PrototypeReturnDataType", .check = CheckPrototypeReturnDataType},
-    {.name = "ParameterDynamicArray", .check = CheckParameterDynamicArray},
-    {.name = "ImplicitDataTypeInDeclaration", .check = CheckImplicitDataTypeInDeclaration},
-    {.name = "HierarchicalInterfaceIdentifier", .check = CheckHierarchicalInterfaceIdentifier},
-    {.name = "DpiDeclarationString", .check = CheckDpiDeclarationString},
-    {.name = "ClassVariableLifetime", .check = CheckClassVariableLifetime},
-    {.name = "CoverpointExpressionType", .check = CheckCoverpointExpressionType},
-    {.name = "CovergroupExpression", .check = CheckCovergroupExpression},
-    {.name = "ConcatenationMultiplier", .check = CheckConcatenationMultiplier},
-    {.name = "ParameterOverride", .check = CheckParameterOverride},
-    {.name = "MultipleDotStarConnections", .check = CheckMultipleDotStarConnections},
-    {.name = "SelectInEventControl", .check = CheckSelectInEventControl},
-    {.name = "EmptyAssignmentPattern", .check = CheckEmptyAssignmentPattern},
-    {.name = "MissingForLoopInitialization", .check = CheckMissingForLoopInitialization},
-    {.name = "MissingForLoopCondition", .check = CheckMissingForLoopCondition},
-    {.name = "MissingForLoopStep", .check = CheckMissingForLoopStep},
-    {.name = "ForeachLoopCondition", .check = CheckForeachLoopCondition},
-    {.name = "SelectInWeight", .check = CheckSelectInWeight},
-    {.name = "AssignmentPattern", .check = CheckAssignmentPattern},
-    {.name = "AssignmentPatternContext", .check = CheckAssignmentPatternContext},
-    {.name = "ScalarAssignmentPattern", .check = CheckScalarAssignmentPattern},
-    {.name = "IncompleteAssignmentPattern", .check = CheckIncompleteAssignmentPattern},
-    {.name = "AssignmentPatternValues", .check = CheckAssignmentPatternValues},
-    {.name = "TargetUnpackedArrayConcatenation", .check = CheckTargetUnpackedArrayConcatenation},
-    {.name = "InsideOperator", .check = CheckInsideOperator},
-    {.name = "InsideOperatorRange", .check = CheckInsideOperatorRange},
-    {.name = "TypeCasting", .check = CheckTypeCasting},
-    {.name = "TimeValue", .check = CheckTimeValue},
-    {.name = "MultipleBins", .check = CheckMultipleBins},
-    {.name = "AssertionstatementAttributeInstance", .check = CheckAssertionStatementAttributeInstance},
-    {.name = "SystemFunctionArguments", .check = CheckSystemFunctionArguments},
-    {.name = "WildcardOperator", .check = CheckWildcardOperators},
-    {.name = "ExponentFormatTimeValue", .check = CheckExponentFormatTimeValue},
-    {.name = "ModportImportExportProt", .check = CheckModportImportExportPort},
-    {.name = "EventControlExpression", .check = CheckEventControlExpression},
-    {.name = "ExtendClass", .check = CheckExtendClass},
-    {.name = "DuplicateConstructor", .check = CheckDuplicateConstructor},
-    {.name = "DuplicateClass", .check = CheckDuplicateClass},
-    {.name = "ExternConstraintUndeclared", .check = CheckExternConstraintUndeclared},
-    {.name = "ExternFunctionUndeclared", .check = CheckExternFunctionUndeclared},
-    {.name = "ExternTaskUndeclared", .check = CheckExternTaskUndeclared},
-    {.name = "ExtendInterfaceClass", .check = CheckExtendInterfaceClass},
-    {.name = "ImplementClass", .check = CheckImplementClass},
-    {.name = "ImplementInterfaceClass", .check = CheckImplementInterfaceClass},
-    {.name = "CircularInheritance", .check = CheckCircularInheritance},
-    {.name = "VoidCastOfVoidFunction", .check = CheckVoidCastOfVoidFunction},
-    {.name = "LogicalNegation", .check = CheckLogicalNegation},
-    // clang-format on
-});
-
-constexpr size_t AllRulesSize = allRules.size();
-
-const auto globalRules = std::to_array<GlobalRule>({
-    // clang-format off
-    {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
-    {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
-    {.name = "FuctionImplementationScope", .check = CheckFuncImplScope},
-    {.name = "MethodOverrideArgumentName", .check = CheckMethodOverrideArgumentName},
-    {.name = "FunctionImplementationReturnType", .check = CheckFunctionImplementationReturnType},
-    {.name = "FunctionImplementationInternalReturnType", .check = CheckFunctionImplementationInternalReturnType},
-    {.name = "MethodImplementationArgumentType", .check = CheckMethodImplementationArgumentType},
-    // clang-format on
-});
-
-constexpr size_t AllGlobalRulesSize = globalRules.size();
-
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
-                 SL::SymbolTable* symbols,
-                 const std::array<Rule, AllRulesSize>& kAllRules) {
-  for (const auto& rule : kAllRules) {
-    if (!rule.enabled) {
-      continue;
-    }
+                 SL::SymbolTable* symbols) {
+  for (const auto& rule : RuleInfo::allRules) {
+    // if (!rule.enabled) {
+    //   continue;
+    // }
     rule.check(fileContent, errors, symbols);
-  }
-}
-
-auto GetYamlConfig(const std::filesystem::path& configFile) -> YAML::Node {
-  if (!configFile.empty() && std::filesystem::exists(configFile)) {
-    try {
-      return YAML::LoadFile(configFile);
-    } catch (const std::exception& e) {
-      std::cerr << "Bad config file" << "\n";
-      return YAML::Node{};
-    }
-  }
-
-  const std::filesystem::path configPath = DefaultConfigFileName;
-  std::filesystem::path currentDir = std::filesystem::current_path();
-
-  while (!std::filesystem::exists(currentDir / configPath)) {
-    if (currentDir.parent_path() == currentDir) {
-      std::cerr << "No config file" << "\n";
-      return YAML::Node{};
-    }
-    currentDir = currentDir.parent_path();
-  }
-
-  try {
-    return YAML::LoadFile(currentDir / configPath);
-  } catch (const std::exception& e) {
-    std::cerr << "Bad config file" << "\n";
-    return YAML::Node{};
-  }
-}
-
-template <typename RuleType>
-void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
-  const YAML::Node node = tree[rule.name];
-  if (node) {
-    const auto value = node.as<std::string>();
-
-    if (value == "yes" || value == "true") {
-      rule.enabled = true;
-    } else if (value == "false" || value == "no") {
-      rule.enabled = false;
-    } else {
-      std::cerr << "Expected boolean, got: "
-                << std::string(value.begin(), value.end()) << "\n";
-    }
-  }
-}
-
-void FilterRules(const std::filesystem::path& configFile,
-                 std::array<Rule, AllRulesSize>& kAllRules,
-                 std::array<GlobalRule, AllGlobalRulesSize>& kGlobalRules) {
-  const auto yaml = GetYamlConfig(configFile);
-  if (yaml.IsNull()) {
-    return;
-  }
-
-  for (auto& rule : kAllRules) {
-    FilterSpecificRule(rule, yaml);
-  }
-  for (auto& rule : kGlobalRules) {
-    FilterSpecificRule(rule, yaml);
-  }
-}
-}  // namespace
-
-void DumpConfig() {
-  for (auto& rule : allRules) {
-    std::cout << rule.name << ": true\n";
-  }
-  for (auto& rule : globalRules) {
-    std::cout << rule.name << ": true\n";
   }
 }
 
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols,
                          const std::filesystem::path& configFile) {
-  auto kAllRules = allRules;
-  auto kGlobalRules = globalRules;
   if (design == nullptr) {
     return;
   }
 
-  FilterRules(configFile, kAllRules, kGlobalRules);
+  // FilterRules(configFile, RuleInfo::allRules, RuleInfo::globalRules);
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {
     if (fileContent == nullptr) {
       continue;
     }
 
-    RunAllRules(fileContent, errors, symbols, kAllRules);
+    RunAllRules(fileContent, errors, symbols);
+    FatalListener listener(errors, symbols);
+    listener.Listen(uhdmDesign);
   }
 
-  FatalListener listener(errors, symbols);
-  listener.Listen(uhdmDesign);
-
-  for (const auto& rule : kGlobalRules) {
-    if (!rule.enabled) {
-      continue;
-    }
+  for (const auto& rule : RuleInfo::globalRules) {
+    // if (!rule.enabled) {
+    //   continue;
+    // }
     rule.check(design, errors, symbols);
   }
 }
