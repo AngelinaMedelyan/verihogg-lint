@@ -6,7 +6,6 @@
 #include "rules/invalid_liblist.h"
 #include "rules/undeclared_cell.h"
 #include "rules/undeclared_design.h"
-#include "rules/undeclared_library.h"
 #include "utils.h"
 
 namespace fs = std::filesystem;

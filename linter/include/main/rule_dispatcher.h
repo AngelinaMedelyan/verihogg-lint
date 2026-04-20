@@ -45,6 +45,7 @@
 #include "rules/incomplete_assignment_pattern.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
+#include "rules/invalid_liblist.h"
 #include "rules/logical_negation.h"
 #include "rules/method_implementation_argument_type.h"
 #include "rules/method_override_argument_name.h"
@@ -69,6 +70,9 @@
 #include "rules/task_implemention_scope.h"
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
+#include "rules/undeclared_cell.h"
+#include "rules/undeclared_configuration.h"
+#include "rules/undeclared_design.h"
 #include "rules/void_cast_of_void_function.h"
 #include "rules/wildcard_equality_operator.h"
 #include "rules/wildcard_inequality_operator.h"
@@ -261,6 +265,14 @@ const auto allRules = std::to_array<Rule>({
      .description = "Operand of type not allowed with logical negation (use == "
                     "null instead)",
      .check = CheckLogicalNegation},
+    {.idName = "WILDCARD_EQUALITY_OPERATOR",
+     .description = "Expecting wildcard operator '==?' instead of '=?='",
+     .internalName = "WildcardOperator",
+     .check = CheckWildcardOperators},
+    {.idName = "INVALID_LIBLIST",
+     .description = "Liblist must have at least one entry",
+     .internalName = "InvalidLiblist",
+     .check = CheckInvalidLiblist},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
@@ -299,6 +311,18 @@ const auto globalRules = std::to_array<GlobalRule>({
      .description = "Argument type of method must be the same as prototype "
                     "argument type (non-standard use of type alias)",
      .check = CheckMethodImplementationArgumentType},
+    {.idName = "UNDECLARED_CELL",
+     .description = "Cell must be declared",
+     .internalName = "UndeclaredCell",
+     .check = CheckUndeclaredCell},
+    {.idName = "UNDECLARED_DESIGN",
+     .description = "Design must be declared",
+     .internalName = "UndeclaredDesign",
+     .check = CheckUndeclaredDesign},
+    {.idName = "UNDECLARED_CONFIGURATION",
+     .description = "Configuration must be declared",
+     .internalName = "UndeclaredConfiguration",
+     .check = CheckUndeclaredConfiguration},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
