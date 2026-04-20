@@ -65,7 +65,7 @@ auto GetFileContentFromPath(const fs::path& path, SL::ErrorContainer* errors,
                             SL::SymbolTable* symbols) -> SL::FileContent* {
   const auto fileContentMap =
       GetDesignFromPath(path, errors, symbols)->getAllFileContents();
-  return fileContentMap[0].second;
+  return fileContentMap.at(0).second;
 }
 }  // namespace
 

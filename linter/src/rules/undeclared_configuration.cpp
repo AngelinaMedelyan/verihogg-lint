@@ -23,7 +23,7 @@ namespace SL = SURELOG;
 struct ConfigInfo {
   SL::NodeId nodeid;
   std::string name;
-  const SL::FileContent* fileContent;
+  const SL::FileContent* fileContent = nullptr;
 };
 
 namespace {

@@ -9,7 +9,7 @@
 struct ModuleInfo {
   std::string_view fullName;
   SURELOG::NodeId nodeId;
-  const SURELOG::FileContent* fileContent;
+  const SURELOG::FileContent* fileContent = nullptr;
 };
 
 namespace ModuleUtils {

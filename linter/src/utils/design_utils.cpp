@@ -53,15 +53,15 @@ auto ExtractDesignInfo(const SL::FileContent* fileContent,
   }
 
   if (identifiers.size() == 1) {
-    info.moduleName = identifiers[0];
+    info.moduleName = identifiers.at(0);
     info.libName = "";
     info.scopeName = info.moduleName;
   } else {
-    info.libName = identifiers[0];
+    info.libName = identifiers.at(0);
     info.moduleName = identifiers.back();
-    info.scopeName = identifiers[1];
+    info.scopeName = identifiers.at(1);
     for (size_t i = 2; i < identifiers.size(); ++i) {
-      info.scopeName = info.scopeName + "::" + std::string(identifiers[i]);
+      info.scopeName = info.scopeName + "::" + std::string(identifiers.at(i));
     }
   }
 

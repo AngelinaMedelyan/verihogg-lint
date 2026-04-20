@@ -1,8 +1,9 @@
 #pragma once
-#include <Surelog/Design/FileContent.h>
+
+#include <Surelog/Design/Design.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 
-void CheckUndeclaredConfiguration(const SURELOG::FileContent* fileContent,
+void CheckUndeclaredConfiguration(SURELOG::Design* design,
                                   SURELOG::ErrorContainer* errors,
                                   SURELOG::SymbolTable* symbols);
