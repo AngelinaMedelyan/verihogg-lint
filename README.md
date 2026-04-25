@@ -180,6 +180,18 @@ The project is intended for static code analysis and checking compliance with co
 
 - `LOGICAL_NEGATION`  
   Operand of type not allowed with logical negation
+
+- `UNDECLARED_CELL`  
+  Cell must be declared
+
+- `UNDECLARED_CONFIGURATION`  
+  Configuration must be declared
+
+- `UNDECLARED_DESIGN`  
+  Design must be declared
+
+- `INVALID_LIBLIST`  
+  Liblist must have at least one entry
 ---
 
 ## Project structure
