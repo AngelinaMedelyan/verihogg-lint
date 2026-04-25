@@ -29,22 +29,6 @@ struct CellInfo {
   const SL::FileContent* fileContent;
 };
 
-auto FindScopeContainer(const SL::FileContent* fileContent, SL::NodeId node)
-    -> SL::NodeId {
-  SL::NodeId current = fileContent->Parent(node);
-  while (current) {
-    const SL::VObjectType type = fileContent->Type(current);
-    if (type == SL::VObjectType::paModule_declaration ||
-        type == SL::VObjectType::paInterface_declaration ||
-        type == SL::VObjectType::paPackage_declaration ||
-        type == SL::VObjectType::paConfig_declaration) {
-      return current;
-    }
-    current = fileContent->Parent(current);
-  }
-  return SL::InvalidNodeId;
-}
-
 auto ExtractCellNameFromClause(const SL::FileContent* fileContent,
                                SL::NodeId cellClause) -> std::string_view {
   const SL::NodeId nameNode =
