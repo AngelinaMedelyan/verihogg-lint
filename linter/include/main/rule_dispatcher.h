@@ -254,8 +254,15 @@ const auto allRules = std::to_array<Rule>({
      .internalName = "ScalarAssignmentPattern",
      .check = CheckScalarAssignmentPattern},
     {.idName = "IncompleteAssignmentPattern",
+     .description =
+         "Checks named struct assignment patterns for missing members",
+     .internalName = "IncompleteAssignmentPattern",
      .check = CheckIncompleteAssignmentPattern},
-    {.idName = "AssignmentPatternValues",
+    {.idName = "ASSIGNMENT_PATTERN_VALUES",
+     .description =
+         "Checks positional assignment patterns for element count "
+         "mismatch against the target type (struct or packed vector)",
+     .internalName = "AssignmentPatternValues",
      .check = CheckAssignmentPatternValues},
     {.idName = "SELECT_IN_EVENT_CONTROL",
      .description = "Select in event control not allowed",
