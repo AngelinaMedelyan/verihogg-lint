@@ -11,6 +11,7 @@
 #include <functional>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "rules/assertion_statement_atribute_instance.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
@@ -210,7 +211,7 @@ const auto allRules = std::to_array<Rule>({
      .description = "Variable of 1-bit scalar type not allowed as assignment "
                     "pattern target",
      .check = CheckScalarAssignmentPattern},
-    {.idName = "IncompleteAssignmentPattern",
+    {.idName = "LINT_INCOMPLETE_ASSIGNMENT_PATTERN",
      .description =
          "Checks named struct assignment patterns for missing members",
      .check = CheckIncompleteAssignmentPattern},
@@ -282,6 +283,8 @@ const auto globalRules = std::to_array<GlobalRule>({
 constexpr size_t AllGlobalRulesSize = globalRules.size();
 
 constexpr size_t TotalRuleCount = AllRulesSize + AllGlobalRulesSize;
+
+static_assert(TotalRuleCount == verihogg_lint::kLintRules.size());
 }  // namespace RuleInfo
 
 void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,
