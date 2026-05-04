@@ -100,6 +100,7 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
   auto kRuleSet = BuildSetOfSelectedRules(configFile);
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {
+    std::cout << fileContent->printSubTree(fileContent->getRootNode()) << "\n";
     if (fileContent == nullptr) {
       continue;
     }

@@ -1,15 +1,16 @@
 #include <Surelog/Design/Design.h>
 
-#include <vector>
+#include <string>
+#include <unordered_map>
 
 struct ConfigInfo {
   SURELOG::NodeId nodeid;
-  std::string name;
-  const SURELOG::FileContent* fileContent;
+  const SURELOG::FileContent* fileContent = nullptr;
 };
 
 namespace ConfigUtils {
 
-auto CollectAllConfig(SURELOG::Design* design) -> std::vector<ConfigInfo>;
+auto CollectAllConfig(SURELOG::Design* design)
+    -> std::unordered_map<std::string, ConfigInfo>;
 
 }  // namespace ConfigUtils

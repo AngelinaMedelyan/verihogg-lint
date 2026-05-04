@@ -6,15 +6,16 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 #include "utils/ast_utils.h"
 #include "utils/design_utils.h"
 
 namespace ConfigUtils {
 
-auto CollectAllConfig(SL::Design* design) -> std::vector<ConfigInfo> {
-  std::vector<ConfigInfo> allConfigs;
+auto CollectAllConfig(SL::Design* design)
+    -> std::unordered_map<std::string, ConfigInfo> {
+  std::unordered_map<std::string, ConfigInfo> allConfigs;
 
   DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fileCont) {
     SL::NodeId const kRoot = fileCont->getRootNode();
@@ -25,11 +26,13 @@ auto CollectAllConfig(SL::Design* design) -> std::vector<ConfigInfo> {
     for (SL::NodeId const kConfigDecl : fileCont->sl_collect_all(
              kRoot, SL::VObjectType::paConfig_declaration)) {
       std::string const kFullName = GetFullName(fileCont, kConfigDecl);
-      allConfigs.push_back(ConfigInfo{
+      if (kFullName == "") {
+        continue;
+      }
+      allConfigs[kFullName] = ConfigInfo{
           .nodeid = kConfigDecl,
-          .name = kFullName,
           .fileContent = fileCont,
-      });
+      };
     }
   });
 

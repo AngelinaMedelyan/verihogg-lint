@@ -1,9 +1,25 @@
-config my_test_config; 
-    design work.testbench_top; 
-    instance testbench_top.f use lib2.golden_model;
-    default liblist lib1 lib2;
+module top;
+  my_design f();
+endmodule // top
+
+module cpu;
+  my_design f();
+endmodule // cpu
+
+module mem;
+  my_design f();
+endmodule // mem
+
+config parent_cfg;
+  design work.top;
+  instance top.cpu use work.cpu_cfg;
+  instance top.mem use work.mem_cfg;
 endconfig
 
-module testbench_top;
-    my_design f();
-endmodule
+config cpu_cfg;
+  design work.cpu;
+endconfig
+
+config mem_cfg;
+  design work.mem;
+endconfig

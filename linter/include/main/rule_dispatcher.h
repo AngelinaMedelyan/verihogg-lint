@@ -267,11 +267,9 @@ const auto allRules = std::to_array<Rule>({
      .check = CheckLogicalNegation},
     {.idName = "WILDCARD_EQUALITY_OPERATOR",
      .description = "Expecting wildcard operator '==?' instead of '=?='",
-     .internalName = "WildcardOperator",
      .check = CheckWildcardOperators},
     {.idName = "INVALID_LIBLIST",
      .description = "Liblist must have at least one entry",
-     .internalName = "InvalidLiblist",
      .check = CheckInvalidLiblist},
 });
 
@@ -313,15 +311,12 @@ const auto globalRules = std::to_array<GlobalRule>({
      .check = CheckMethodImplementationArgumentType},
     {.idName = "UNDECLARED_CELL",
      .description = "Cell must be declared",
-     .internalName = "UndeclaredCell",
      .check = CheckUndeclaredCell},
     {.idName = "UNDECLARED_DESIGN",
      .description = "Design must be declared",
-     .internalName = "UndeclaredDesign",
      .check = CheckUndeclaredDesign},
     {.idName = "UNDECLARED_CONFIGURATION",
      .description = "Configuration must be declared",
-     .internalName = "UndeclaredConfiguration",
      .check = CheckUndeclaredConfiguration},
 });
 

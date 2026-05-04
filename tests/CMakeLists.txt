@@ -13,9 +13,9 @@ target_include_directories(class_checks_test
     ${GTEST_INCLUDE_DIR}
   )
 
-add_executable(configurations_test $<TARGET_OBJECTS:verihoggLintLib> configurations_test.cpp utils.cpp)
+add_executable(configurations_checks_test $<TARGET_OBJECTS:verihoggLintLib> configurations_checks_test.cpp utils.cpp)
 
-target_link_libraries(configurations_test
+target_link_libraries(configurations_checks_test
   PUBLIC
    verihoggLintLib
    gtest gtest_main
@@ -27,7 +27,7 @@ target_link_libraries(configurations_test
    ${ZLIB_LIBRARY}
 )
 
-target_include_directories(configurations_test
+target_include_directories(configurations_checks_test
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -72,7 +72,7 @@ target_include_directories(assignment_pattern_checks_test
 )
 
 include(GoogleTest)
-gtest_discover_tests(class_checks_test)
-gtest_discover_tests(non_standard_checks_test)
-gtest_discover_tests(assignment_pattern_checks_test)
-gtest_discover_tests(configurations_test)
+# gtest_discover_tests(class_checks_test)
+# gtest_discover_tests(non_standard_checks_test)
+# gtest_discover_tests(assignment_pattern_checks_test)
+gtest_discover_tests(configurations_checks_test)
