@@ -72,7 +72,7 @@ target_include_directories(assignment_pattern_checks_test
 )
 
 include(GoogleTest)
-# gtest_discover_tests(class_checks_test)
-# gtest_discover_tests(non_standard_checks_test)
-# gtest_discover_tests(assignment_pattern_checks_test)
+gtest_discover_tests(class_checks_test)
+gtest_discover_tests(non_standard_checks_test)
+gtest_discover_tests(assignment_pattern_checks_test)
 gtest_discover_tests(configurations_checks_test)
