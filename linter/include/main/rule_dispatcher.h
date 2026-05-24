@@ -78,6 +78,7 @@
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
 #include "rules/undeclared_cell.h"
+#include "rules/undeclared_checker.h"
 #include "rules/undeclared_configuration.h"
 #include "rules/undeclared_design.h"
 #include "rules/void_cast_of_void_function.h"
@@ -344,9 +345,13 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "DUPLICATE_COVERPOINT",
      .description = "Duplicate coverpoint #, already declared at line # file #",
      .check = CheckDuplicateCoverpoint},
+<<<<<<< HEA
     {.idName = "COVERPOINT_EXPRESSION_TYPE",
      .description = "Coverpoint expression should be of an integral data type",
      .check = CheckCoverpointExpressionType},
+    {.idName = "UNDECLARED_CHECKER",
+     .description = "Checker is not declared",
+     .check = CheckUndeclaredChecker},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
