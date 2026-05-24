@@ -46,6 +46,7 @@
 #include "rules/function_implementation_return_type.h"
 #include "rules/function_implemention_scope.h"
 #include "rules/hierarchical_interface_identifier.h"
+#include "rules/illegal_checker_instance.h"
 #include "rules/implement_class.h"
 #include "rules/implement_interface_class.h"
 #include "rules/implicit_data_type.h"
@@ -278,6 +279,10 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "DUPLICATE_CHECKER",
      .description = "Duplicate checker is already declared",
      .check = CheckDuplicateChecker},
+    {.idName = "ILLEGAL_CHECKER_INSTANCE",
+     .description =
+         "Instance  of checker is not allowed in procedural code of checker",
+     .check = CheckIllegalCheckerInstance},
 });
 
 constexpr size_t AllRulesSize = allRules.size();

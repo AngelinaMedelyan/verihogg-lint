@@ -84,6 +84,7 @@ enum LintIdEnum : uint16_t {
   LINT_DUPLICATE_COVERPOINT,
   LINT_DUPLICATE_CHECKER,
   LINT_UNDECLARED_CHECKER,
+  LINT_ILLEGAL_CHECKER_INSTANCE,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -301,6 +302,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Duplicate checker %s, already declared"},
     LintRuleInfo{.type = LINT_UNDECLARED_CHECKER,
                  .text = "Undeclared checker '%s'"},
+    LintRuleInfo{.type = LINT_ILLEGAL_CHECKER_INSTANCE,
+                 .text = "Illegal checker instance %s"},
 };
 
 inline void RegisterLintRules() {
