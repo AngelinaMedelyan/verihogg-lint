@@ -350,7 +350,6 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "DUPLICATE_COVERPOINT",
      .description = "Duplicate coverpoint #, already declared at line # file #",
      .check = CheckDuplicateCoverpoint},
-<<<<<<< HEA
     {.idName = "COVERPOINT_EXPRESSION_TYPE",
      .description = "Coverpoint expression should be of an integral data type",
      .check = CheckCoverpointExpressionType},
