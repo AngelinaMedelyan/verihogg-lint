@@ -91,17 +91,22 @@ void CollectStringsForAccessCheck(const SL::FileContent* fc, SL::NodeId node,
     return;
   }
   {
-    std::vector<SL::NodeId> directStrs;
+    SL::NodeId prevStr = SL::InvalidNodeId;
+    SL::NodeId lastStr = SL::InvalidNodeId;
+    bool hasAdjacent = false;
     for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
-      if (fc->Type(c) == SL::VObjectType::slStringConst) {
-        directStrs.push_back(c);
+      if (fc->Type(c) != SL::VObjectType::slStringConst) {
+        continue;
       }
+      if (prevStr != SL::InvalidNodeId && fc->Sibling(prevStr) == c) {
+        hasAdjacent = true;
+      }
+      prevStr = c;
+      lastStr = c;
     }
-    for (size_t i = 0; i + 1 < directStrs.size(); ++i) {
-      if (fc->Sibling(directStrs[i]) == directStrs[i + 1]) {
-        out.push_back(directStrs.back());
-        return;
-      }
+    if (hasAdjacent) {
+      out.push_back(lastStr);
+      return;
     }
   }
   if (t == SL::VObjectType::paPs_or_hierarchical_identifier) {
