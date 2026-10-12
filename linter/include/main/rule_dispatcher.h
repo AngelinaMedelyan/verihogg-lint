@@ -15,6 +15,7 @@
 #include "fix/source_manager.h"
 #include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
+#include "rules/always_event_control.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
 #include "rules/assignment_pattern_values.h"
@@ -254,6 +255,10 @@ const auto allRules = std::to_array<Rule>({
      .description =
          "Instance  of checker is not allowed in procedural code of checker",
      .check = CheckIllegalCheckerInstance},
+     {.idName = "ALWAYS_EVENT_CONTROL",
+     .description =
+         "always block without event control is not allowed",
+     .check = CheckAlwaysEventControl},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
