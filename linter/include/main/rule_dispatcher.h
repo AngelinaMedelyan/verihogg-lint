@@ -45,6 +45,7 @@
 #include "rules/extern_task_undeclared.h"
 #include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
+#include "rules/fork_disable.h"
 #include "rules/fork_variable_access.h"
 #include "rules/function_implementation_internal_return_type.h"
 #include "rules/function_implementation_return_type.h"
@@ -267,6 +268,9 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "FORK_VARIABLE_ACCESS",
      .description = "Using %s in a fork is not allowed",
      .check = CheckForkVariableAccess},
+    {.idName = "FORK_DISABLE",
+     .description = "Do not use disable statement with fork block name",
+     .check = CheckForkDisable},
 });
 
 constexpr size_t AllRulesSize = allRules.size();

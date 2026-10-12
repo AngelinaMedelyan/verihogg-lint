@@ -91,6 +91,7 @@ enum LintIdEnum : uint16_t {
   LINT_ALWAYS_EVENT_CONTROL,
   LINT_NAMED_FORK,
   LINT_FORK_VARIABLE_ACCESS,
+  LINT_FORK_DISABLE,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -321,6 +322,10 @@ inline constexpr std::array kLintRules = {
                  .text = "fork block must have a name"},
     LintRuleInfo{.type = LINT_FORK_VARIABLE_ACCESS,
                  .text = "Using %s in a fork is not allowed"},
+    LintRuleInfo{
+        .type = LINT_FORK_DISABLE,
+        .text =
+            "Using disable statement with fork block name '%s' is not allowed"},
 };
 
 inline void RegisterLintRules() {
