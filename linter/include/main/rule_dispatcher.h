@@ -45,6 +45,7 @@
 #include "rules/extern_task_undeclared.h"
 #include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
+#include "rules/fork_variable_access.h"
 #include "rules/function_implementation_internal_return_type.h"
 #include "rules/function_implementation_return_type.h"
 #include "rules/function_implemention_scope.h"
@@ -93,6 +94,7 @@
 #include "rules/void_cast_of_void_function.h"
 #include "rules/wildcard_equality_operator.h"
 #include "rules/wildcard_inequality_operator.h"
+
 constexpr const char* DefaultConfigFileName = ".verihogg-lint";
 
 namespace RuleInfo {
@@ -262,6 +264,9 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "NAMED_FORK",
      .description = "fork block must have a name",
      .check = CheckNamedFork},
+    {.idName = "FORK_VARIABLE_ACCESS",
+     .description = "Using %s in a fork is not allowed",
+     .check = CheckForkVariableAccess},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
