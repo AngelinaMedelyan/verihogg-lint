@@ -36,14 +36,22 @@ bool IsJoinKeyword(SL::VObjectType t) {
 
 bool ContainsType(const SL::FileContent* fc, SL::NodeId node,
                   SL::VObjectType type) {
-  if (node == SL::InvalidNodeId) return false;
-  if (fc->Type(node) == type) return true;
+  if (node == SL::InvalidNodeId) {
+    return false;
+  }
+  if (fc->Type(node) == type) {
+    return true;
+  }
   for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
-    if (ContainsType(fc, c, type)) return true;
+    if (ContainsType(fc, c, type)) {
+      return true;
+    }
   }
   return false;
 }
 
+// const-квалификатор в этой версии Surelog кодируется двумя разными
+// узлами: paConst_type — для data_declaration, paCONST — для tf-портов.
 bool HasConstQualifier(const SL::FileContent* fc, SL::NodeId node) {
   return ContainsType(fc, node, kConstKw) ||
          ContainsType(fc, node, kConstTypeKw);
@@ -56,8 +64,12 @@ std::string NameOf(const SL::FileContent* fc, SL::NodeId node) {
 void CollectStringsOutsideNestedForks(const SL::FileContent* fc,
                                       SL::NodeId node,
                                       std::vector<SL::NodeId>& out) {
-  if (node == SL::InvalidNodeId) return;
-  if (fc->Type(node) == SL::VObjectType::paPar_block) return;
+  if (node == SL::InvalidNodeId) {
+    return;
+  }
+  if (fc->Type(node) == SL::VObjectType::paPar_block) {
+    return;
+  }
   if (fc->Type(node) == SL::VObjectType::slStringConst) {
     out.push_back(node);
     return;
@@ -70,16 +82,26 @@ void CollectStringsOutsideNestedForks(const SL::FileContent* fc,
 void CollectStringsForAccessCheck(const SL::FileContent* fc, SL::NodeId node,
                                   std::vector<SL::NodeId>& out,
                                   SL::NodeId parent = SL::InvalidNodeId) {
-  if (node == SL::InvalidNodeId) return;
+  if (node == SL::InvalidNodeId) {
+    return;
+  }
   const auto t = fc->Type(node);
-  if (t == SL::VObjectType::paPar_block) return;
-  if (t == SL::VObjectType::paBlock_item_declaration) return;
+  if (t == SL::VObjectType::paPar_block) {
+    return;
+  }
+  if (t == SL::VObjectType::paBlock_item_declaration) {
+    return;
+  }
   if (t == SL::VObjectType::slStringConst) {
     if (parent != SL::InvalidNodeId) {
       for (auto sib = fc->Child(parent); sib != SL::InvalidNodeId;
            sib = fc->Sibling(sib)) {
-        if (sib == node) break;
-        if (fc->Type(sib) == kDollarKw) return;
+        if (sib == node) {
+          break;
+        }
+        if (fc->Type(sib) == kDollarKw) {
+          return;
+        }
       }
     }
     out.push_back(node);
@@ -92,9 +114,13 @@ void CollectStringsForAccessCheck(const SL::FileContent* fc, SL::NodeId node,
 
 void CollectBlockItemDecls(const SL::FileContent* fc, SL::NodeId node,
                            std::vector<SL::NodeId>& out) {
-  if (node == SL::InvalidNodeId) return;
+  if (node == SL::InvalidNodeId) {
+    return;
+  }
   const auto t = fc->Type(node);
-  if (t == SL::VObjectType::paPar_block) return;
+  if (t == SL::VObjectType::paPar_block) {
+    return;
+  }
   if (t == SL::VObjectType::paBlock_item_declaration) {
     out.push_back(node);
     return;
@@ -106,12 +132,18 @@ void CollectBlockItemDecls(const SL::FileContent* fc, SL::NodeId node,
 
 void CollectForInitNames(const SL::FileContent* fc, SL::NodeId node,
                          std::unordered_set<std::string>& out) {
-  if (node == SL::InvalidNodeId) return;
-  if (fc->Type(node) == SL::VObjectType::paPar_block) return;
+  if (node == SL::InvalidNodeId) {
+    return;
+  }
+  if (fc->Type(node) == SL::VObjectType::paPar_block) {
+    return;
+  }
   if (fc->Type(node) == kForInit || fc->Type(node) == kForVarDecl) {
     std::vector<SL::NodeId> strings;
     CollectStringsOutsideNestedForks(fc, node, strings);
-    for (auto s : strings) out.insert(NameOf(fc, s));
+    for (auto s : strings) {
+      out.insert(NameOf(fc, s));
+    }
     return;
   }
   for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
@@ -128,7 +160,9 @@ std::unordered_set<std::string> CollectConstantNames(
     for (auto d : fc->sl_collect_all(root, t)) {
       std::vector<SL::NodeId> strings;
       CollectStringsOutsideNestedForks(fc, d, strings);
-      for (auto s : strings) names.insert(NameOf(fc, s));
+      for (auto s : strings) {
+        names.insert(NameOf(fc, s));
+      }
     }
   };
 
@@ -138,10 +172,14 @@ std::unordered_set<std::string> CollectConstantNames(
   collectFromDecl(SL::VObjectType::paGenvar_declaration);
 
   for (auto d : fc->sl_collect_all(root, kDataDecl)) {
-    if (!HasConstQualifier(fc, d)) continue;
+    if (!HasConstQualifier(fc, d)) {
+      continue;
+    }
     std::vector<SL::NodeId> strings;
     CollectStringsOutsideNestedForks(fc, d, strings);
-    for (auto s : strings) names.insert(NameOf(fc, s));
+    for (auto s : strings) {
+      names.insert(NameOf(fc, s));
+    }
   }
 
   return names;
@@ -159,7 +197,9 @@ RefArgs CollectRefArgs(const SL::FileContent* fc) {
   for (auto p : fc->sl_collect_all(root, kTfPortItem)) {
     const bool isRef =
         ContainsType(fc, p, kRefKw) || ContainsType(fc, p, kInoutKw);
-    if (!isRef) continue;
+    if (!isRef) {
+      continue;
+    }
     const bool isConst = HasConstQualifier(fc, p);
 
     std::vector<SL::NodeId> strings;
@@ -168,14 +208,18 @@ RefArgs CollectRefArgs(const SL::FileContent* fc) {
     for (auto s : strings) {
       const std::string name = NameOf(fc, s);
       r.allRef.insert(name);
-      if (isConst) r.constRef.insert(name);
+      if (isConst) {
+        r.constRef.insert(name);
+      }
     }
   }
   return r;
 }
 
 bool LooksLikeLiteral(const std::string& s) {
-  if (s.empty()) return true;
+  if (s.empty()) {
+    return true;
+  }
   const char c = s.front();
   return c == '"' || c == '\'' || c == '$';
 }
@@ -185,7 +229,9 @@ bool LooksLikeLiteral(const std::string& s) {
 void CheckForkVariableAccess(const SURELOG::FileContent* fileContent,
                              SURELOG::ErrorContainer* errors,
                              SURELOG::SymbolTable* symbols) {
-  if (fileContent == nullptr) return;
+  if (fileContent == nullptr) {
+    return;
+  }
 
   const auto constantNames = CollectConstantNames(fileContent);
   const auto refArgs = CollectRefArgs(fileContent);
@@ -223,7 +269,9 @@ void CheckForkVariableAccess(const SURELOG::FileContent* fileContent,
     for (auto d : decls) {
       std::vector<SL::NodeId> strings;
       CollectStringsOutsideNestedForks(fileContent, d, strings);
-      for (auto s : strings) localNames.insert(NameOf(fileContent, s));
+      for (auto s : strings) {
+        localNames.insert(NameOf(fileContent, s));
+      }
     }
 
     std::vector<SL::NodeId> usages;
@@ -233,12 +281,22 @@ void CheckForkVariableAccess(const SURELOG::FileContent* fileContent,
     }
 
     for (auto s : usages) {
-      if (skipNodes.contains(static_cast<unsigned int>(s))) continue;
+      if (skipNodes.contains(static_cast<unsigned int>(s))) {
+        continue;
+      }
       const std::string name = NameOf(fileContent, s);
-      if (LooksLikeLiteral(name)) continue;
-      if (localNames.count(name)) continue;
-      if (constantNames.count(name)) continue;
-      if (refArgs.constRef.count(name)) continue;
+      if (LooksLikeLiteral(name)) {
+        continue;
+      }
+      if (localNames.count(name)) {
+        continue;
+      }
+      if (constantNames.count(name)) {
+        continue;
+      }
+      if (refArgs.constRef.count(name)) {
+        continue;
+      }
 
       ReportError(fileContent, s, name,
                   verihogg_lint::LINT_FORK_VARIABLE_ACCESS, errors, symbols);
