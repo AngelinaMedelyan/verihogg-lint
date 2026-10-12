@@ -69,22 +69,6 @@ SL::NodeId UnwrapStatement(const SL::FileContent* fC, SL::NodeId node) {
   return SL::InvalidNodeId;
 }
 
-bool HasEventControl(const SL::FileContent* fC, SL::NodeId node) {
-  if (node == SL::InvalidNodeId) {
-    return false;
-  }
-  if (fC->Type(node) == SL::VObjectType::paEvent_control) {
-    return true;
-  }
-  for (SL::NodeId c = fC->Child(node); c != SL::InvalidNodeId;
-       c = fC->Sibling(c)) {
-    if (HasEventControl(fC, c)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 }  // namespace
 
 void CheckAlwaysEventControl(const SURELOG::FileContent* fileContent,
@@ -105,13 +89,9 @@ void CheckAlwaysEventControl(const SURELOG::FileContent* fileContent,
     const SL::NodeId statement =
         StatementAfterKeyword(fileContent, alwaysConstruct);
     const SL::NodeId unwrapped = UnwrapStatement(fileContent, statement);
-
-    bool ok = false;
-    if (unwrapped != SL::InvalidNodeId &&
-        fileContent->Type(unwrapped) ==
-            SL::VObjectType::paProcedural_timing_control_statement) {
-      ok = HasEventControl(fileContent, unwrapped);
-    }
+    const bool ok = unwrapped != SL::InvalidNodeId &&
+                    fileContent->Type(unwrapped) ==
+                        SL::VObjectType::paProcedural_timing_control_statement;
 
     if (!ok) {
       ReportError(fileContent, alwaysConstruct, "always",
