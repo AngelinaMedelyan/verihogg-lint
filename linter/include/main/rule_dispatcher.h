@@ -255,9 +255,8 @@ const auto allRules = std::to_array<Rule>({
      .description =
          "Instance  of checker is not allowed in procedural code of checker",
      .check = CheckIllegalCheckerInstance},
-     {.idName = "ALWAYS_EVENT_CONTROL",
-     .description =
-         "always block without event control is not allowed",
+    {.idName = "ALWAYS_EVENT_CONTROL",
+     .description = "always block without event control is not allowed",
      .check = CheckAlwaysEventControl},
 });
 
