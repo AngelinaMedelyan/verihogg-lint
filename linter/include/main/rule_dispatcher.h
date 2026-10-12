@@ -72,6 +72,7 @@
 #include "rules/modport_import_export_port.h"
 #include "rules/multiple_bins.h"
 #include "rules/multiple_dot_star_connection.h"
+#include "rules/named_fork.h"
 #include "rules/nof_parameter_override.h"
 #include "rules/parameter_dynamic_array.h"
 #include "rules/parameter_override.h"
@@ -258,6 +259,9 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "ALWAYS_EVENT_CONTROL",
      .description = "always block without event control is not allowed",
      .check = CheckAlwaysEventControl},
+    {.idName = "NAMED_FORK",
+     .description = "fork block must have a name",
+     .check = CheckNamedFork},
 });
 
 constexpr size_t AllRulesSize = allRules.size();

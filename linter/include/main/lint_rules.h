@@ -89,6 +89,7 @@ enum LintIdEnum : uint16_t {
   LINT_UNDECLARED_CHECKER,
   LINT_ILLEGAL_CHECKER_INSTANCE,
   LINT_ALWAYS_EVENT_CONTROL,
+  LINT_NAMED_FORK,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -315,6 +316,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Illegal checker instance %s"},
     LintRuleInfo{.type = LINT_ALWAYS_EVENT_CONTROL,
                  .text = "always block without event control is not allowed"},
+    LintRuleInfo{.type = LINT_NAMED_FORK,
+                 .text = "fork block must have a name"},
 };
 
 inline void RegisterLintRules() {
