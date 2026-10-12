@@ -25,6 +25,7 @@
 #include "rules/constraint_implemention_scope.h"
 #include "rules/covergroup_expression.h"
 #include "rules/coverpoint_expression_type.h"
+#include "rules/disable_fork.h"
 #include "rules/dpi_decl_string.h"
 #include "rules/duplicate_checker.h"
 #include "rules/duplicate_class.h"
@@ -271,6 +272,9 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "FORK_DISABLE",
      .description = "Do not use disable statement with fork block name",
      .check = CheckForkDisable},
+    {.idName = "DISABLE_FORK",
+     .description = "Do not use 'disable fork'",
+     .check = CheckDisableFork},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
