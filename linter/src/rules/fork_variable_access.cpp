@@ -50,8 +50,6 @@ bool ContainsType(const SL::FileContent* fc, SL::NodeId node,
   return false;
 }
 
-// const-квалификатор в этой версии Surelog кодируется двумя разными
-// узлами: paConst_type — для data_declaration, paCONST — для tf-портов.
 bool HasConstQualifier(const SL::FileContent* fc, SL::NodeId node) {
   return ContainsType(fc, node, kConstKw) ||
          ContainsType(fc, node, kConstTypeKw);
@@ -90,6 +88,53 @@ void CollectStringsForAccessCheck(const SL::FileContent* fc, SL::NodeId node,
     return;
   }
   if (t == SL::VObjectType::paBlock_item_declaration) {
+    return;
+  }
+  {
+    std::vector<SL::NodeId> directStrs;
+    for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
+      if (fc->Type(c) == SL::VObjectType::slStringConst) {
+        directStrs.push_back(c);
+      }
+    }
+    for (size_t i = 0; i + 1 < directStrs.size(); ++i) {
+      if (fc->Sibling(directStrs[i]) == directStrs[i + 1]) {
+        out.push_back(directStrs.back());
+        return;
+      }
+    }
+  }
+  if (t == SL::VObjectType::paPs_or_hierarchical_identifier) {
+    if (parent != SL::InvalidNodeId) {
+      for (auto s = fc->Sibling(node); s != SL::InvalidNodeId;
+           s = fc->Sibling(s)) {
+        if (ContainsType(fc, s, SL::VObjectType::slStringConst)) {
+          return;
+        }
+      }
+    }
+    SL::NodeId lastStr = SL::InvalidNodeId;
+    for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
+      if (fc->Type(c) == SL::VObjectType::slStringConst) {
+        lastStr = c;
+      }
+    }
+    if (lastStr != SL::InvalidNodeId) {
+      out.push_back(lastStr);
+      return;
+    }
+    for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
+      CollectStringsForAccessCheck(fc, c, out, node);
+    }
+    return;
+  }
+  if (t == SL::VObjectType::paSubroutine_call) {
+    for (auto c = fc->Child(node); c != SL::InvalidNodeId; c = fc->Sibling(c)) {
+      if (fc->Type(c) == SL::VObjectType::slStringConst) {
+        continue;
+      }
+      CollectStringsForAccessCheck(fc, c, out, node);
+    }
     return;
   }
   if (t == SL::VObjectType::slStringConst) {
